@@ -1,251 +1,94 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
-
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-
-<title>Resident Directory Portal</title>
-
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-
-<link rel="stylesheet" href="style.css">
-
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Resident Directory Portal</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
 </head>
-
 <body>
 
 <div class="container">
-
-<header>
-
-<div class="header-title">
-
-<h1>Resident Accounts Directory</h1>
-
-<p>
-Lookup account details, street addresses,
-blocks, and lots.
-</p>
-
-</div>
-
-<button
-class="btn-add"
-onclick="toggleModal(true)"
->
-
-<span>+</span>
-
-Add New Record
-
-</button>
-
-</header>
-
-<div class="filter-area">
-
-<select
-id="addressFilter"
-
->
-
-<option value="">
-
-All Addresses
-
-</option>
-
-</select>
-
-<span id="addressCount">
-
-Total Consumers: 0
-
-</span>
-
-</div>
-
-<div class="search-wrapper">
-
-<svg
-class="search-icon"
-viewBox="0 0 24 24"
->
-
-<path d="M15.5 14h-.79l-.28-.27A6.471 6.471 0 0 0 16 9.5A6.5 6.5 0 1 0 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5S14 7.01 14 9.5S11.99 14 9.5 14z"/>
-
-</svg>
-
-<input
-
-type="text"
-
-id="searchInput"
-
-class="search-input"
-
-placeholder="Search by name, account number, address, block, or lot..."
-
-
-
->
-
-</div>
-
-<div class="card-container">
-
-<table>
-
-<thead>
-
-<tr>
-
-<th>Account No.</th>
-
-<th>Full Name</th>
-
-<th>Street Address</th>
-
-<th>Block</th>
-
-<th>Lot</th>
-
-<th>Action</th>
-
-</tr>
-
-</thead>
-
-<tbody id="directoryTable">
-
-</tbody>
-
-</table>
-
-<div
-
-id="noResults"
-
-class="no-results"
-
-style="display:none;"
-
->
-
-No records found matching your search term.
-
-</div>
-
-</div>
-
-</div>
-<!-- Add Resident Modal -->
-<div class="modal-overlay" id="addModal">
-
-    <div class="modal">
-
-        <h2>Add New Resident</h2>
-
-        <form id="addForm">
-
-            <div class="form-group">
-
-                <label>Account Number</label>
-
-                <input
-                    type="text"
-                    id="accNum"
-                    required
-                    placeholder="e.g. STM2026-0001"
-                >
-
-            </div>
-
-            <div class="form-group">
-
-                <label>Full Name</label>
-
-                <input
-                    type="text"
-                    id="fullName"
-                    required
-                    placeholder="Enter full name"
-                >
-
-            </div>
-
-            <div class="form-group">
-
-                <label>Street Address</label>
-
-                <input
-                    type="text"
-                    id="address"
-                    required
-                    placeholder="Street Address"
-                >
-
-            </div>
-
-            <div class="form-row">
-
-                <div class="form-group">
-
-                    <label>Block</label>
-
-                    <input
-                        type="text"
-                        id="block"
-                        required
-                    >
-
-                </div>
-
-                <div class="form-group">
-
-                    <label>Lot</label>
-
-                    <input
-                        type="text"
-                        id="lot"
-                        required
-                    >
-
-                </div>
-
-            </div>
-
-            <div class="modal-actions">
-
-                <button
-                    type="button"
-                    class="btn-cancel"
-                    
-                >
-                    Cancel
-                </button>
-
-                <button
-                    type="submit"
-                    class="btn-save"
-                >
-                    Save Record
-                </button>
-
-            </div>
-
-        </form>
-
+    <header>
+        <div class="header-title">
+            <h1>Resident Accounts Directory</h1>
+            <p>Lookup account details, street addresses, blocks, and lots.</p>
+        </div>
+        <button class="btn-add">
+            <span>+</span> Add New Record
+        </button>
+    </header>
+
+    <div class="filter-area">
+        <select id="addressFilter">
+            <option value="">All Addresses</option>
+        </select>
+        <span id="addressCount">Total Consumers: 0</span>
     </div>
 
-</div>
-<!-- Main JavaScript -->
-<script src="script.js"></script>
+    <div class="search-wrapper">
+        <svg class="search-icon" viewBox="0 0 24 24">
+            <path d="M15.5 14h-.79l-.28-.27A6.471 6.471 0 0 0 16 9.5A6.5 6.5 0 1 0 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5S14 7.01 14 9.5S11.99 14 9.5 14z"/>
+        </svg>
+        <input type="text" id="searchInput" class="search-input" placeholder="Search by name, account number, address, block, or lot...">
+    </div>
 
-<!-- Firebase -->
-<script type="module" src="firebase.js"></script>
+    <div class="card-container">
+        <table>
+            <thead>
+                <tr>
+                    <th>Account No.</th>
+                    <th>Full Name</th>
+                    <th>Street Address</th>
+                    <th>Block</th>
+                    <th>Lot</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+            <tbody id="directoryTable"></tbody>
+        </table>
+        <div id="noResults" class="no-results" style="display:none;">
+            No records found matching your search term.
+        </div>
+    </div>
+</div>
+
+<div class="modal-overlay" id="addModal">
+    <div class="modal">
+        <h2>Add New Resident</h2>
+        <form id="addForm">
+            <div class="form-group">
+                <label>Account Number</label>
+                <input type="text" id="accNum" required placeholder="e.g. STM2026-0001">
+            </div>
+            <div class="form-group">
+                <label>Full Name</label>
+                <input type="text" id="fullName" required placeholder="Enter full name">
+            </div>
+            <div class="form-group">
+                <label>Street Address</label>
+                <input type="text" id="address" required placeholder="Street Address">
+            </div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Block</label>
+                    <input type="text" id="block" required>
+                </div>
+                <div class="form-group">
+                    <label>Lot</label>
+                    <input type="text" id="lot" required>
+                </div>
+            </div>
+            <div class="modal-actions">
+                <button type="button" id="btnCancel" class="btn-cancel">Cancel</button>
+                <button type="submit" class="btn-save">Save Record</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script type="module" src="script.js"></script>
 
 </body>
 </html>
