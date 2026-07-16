@@ -1,491 +1,115 @@
-// ===============================
-// Resident Records
-// ===============================
+import { initializeApp } from "https://www.gstatic.com/firebasejs/12.1.0/firebase-app.js";
+import {
+    getFirestore, collection, addDoc, updateDoc, deleteDoc, doc, onSnapshot
+} from "https://www.gstatic.com/firebasejs/12.1.0/firebase-firestore.js";
 
-const initialData = [
-    {
-        acc: "STM2018-0001RM",
-        name: "Rose Ann Mariano",
-        address: "St. Mathews",
-        block: "3",
-        lot: "2"
-    },
-    {
-        acc: "STM2018-0002EE",
-        name: "Evelyn Enriquez",
-        address: "St. Mathews",
-        block: "3",
-        lot: "3"
-    }
-];
+const firebaseConfig = {
+    apiKey: "AIzaSyD1D2xYJ5egUk13q-bRs7OaejQhIHTKr7Q",
+    authDomain: "area-finder-540ae.firebaseapp.com",
+    projectId: "area-finder-540ae",
+    storageBucket: "area-finder-540ae.firebasestorage.app",
+    messagingSenderId: "908056736195",
+    appId: "1:908056736195:web:97e8af6311c511bdf4cd76"
+};
 
-// Load records from localStorage
-let records =
-JSON.parse(localStorage.getItem("residentRecords"))
-||
-initialData;
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+const residentCollection = collection(db, "residents");
 
-
-// ===============================
-// Render Table
-// ===============================
-
-function renderTable(data){
-
-    const tableBody =
-    document.getElementById("directoryTable");
-
-    const noResults =
-    document.getElementById("noResults");
-
+let records = [];
+let editingId = null; // We use ID instead of acc
+function renderTable(data) {
+    const tableBody = document.getElementById("directoryTable");
+    const noResults = document.getElementById("noResults");
     tableBody.innerHTML = "";
 
-    if(data.length===0){
-
-        noResults.style.display="block";
-
+    if (data.length === 0) {
+        noResults.style.display = "block";
         return;
-
     }
+    noResults.style.display = "none";
 
-    noResults.style.display="none";
-
-    data.forEach(item=>{
-
-        const row=document.createElement("tr");
-
-        row.innerHTML=`
-
-<td>
-
-<span class="badge">
-
-${item.acc}
-
-</span>
-
-</td>
-
-<td>
-
-${item.name}
-
-</td>
-
-<td>
-
-${item.address}
-
-</td>
-
-<td>
-
-Block ${item.block}
-
-</td>
-
-<td>
-
-Lot ${item.lot}
-
-</td>
-
-<td>
-
-<button
-class="btn-edit"
-onclick="editRecord('${item.acc}')"
->
-
-Edit
-
-</button>
-
-<button
-class="btn-delete"
-onclick="deleteRecord('${item.acc}')"
->
-
-Delete
-
-</button>
-
-</td>
-
-`;
-
+    data.forEach(item => {
+        const row = document.createElement("tr");
+        row.innerHTML = `
+            <td><span class="badge">${item.acc}</span></td>
+            <td>${item.name}</td>
+            <td>${item.address}</td>
+            <td>Block ${item.block}</td>
+            <td>Lot ${item.lot}</td>
+            <td>
+                <button class="btn-edit" data-id="${item.id}">Edit</button>
+                <button class="btn-delete" data-id="${item.id}">Delete</button>
+            </td>
+        `;
         tableBody.appendChild(row);
-
     });
-
 }
 
-
-
-// ===============================
-// Address Filter
-// ===============================
-
-function loadAddressFilter(){
-
-    const select =
-    document.getElementById("addressFilter");
-
-    select.innerHTML=
-    `<option value="">All Addresses</option>`;
-
-    const addresses=[
-
-        ...new Set(
-            records.map(
-                r=>r.address
-            )
-        )
-
-    ];
-
-    addresses.forEach(address=>{
-
-        const option=
-        document.createElement("option");
-
-        option.value=address;
-
-        option.textContent=address;
-
-        select.appendChild(option);
-
-    });
-
+function updateAddressCount(data) {
+    const countBox = document.getElementById("addressCount");
+    if (countBox) countBox.innerHTML = "Total Consumers: " + data.length;
 }
-
-
-
-function filterByAddress(){
-
-    const address=
-
-    document.getElementById(
-        "addressFilter"
-    ).value;
-
-    if(address===""){
-
-        renderTable(records);
-
-        updateAddressCount(records);
-
-        return;
-
-    }
-
-    const filtered=
-
-    records.filter(
-
-        item=>item.address===address
-
-    );
-
-    renderTable(filtered);
-
-    updateAddressCount(filtered);
-
-}
-// ===============================
-// Live Search
-// ===============================
-
-function filterDirectory(){
-
-    const search=document
-    .getElementById("searchInput")
-    .value
-    .toLowerCase();
-
-    const filtered=records.filter(item=>{
-
-        return(
-
-            item.acc
-            .toLowerCase()
-            .includes(search)
-
-            ||
-
-            item.name
-            .toLowerCase()
-            .includes(search)
-
-            ||
-
-            item.address
-            .toLowerCase()
-            .includes(search)
-
-            ||
-
-            item.block
-            .toLowerCase()
-            .includes(search)
-
-            ||
-
-            item.lot
-            .toLowerCase()
-            .includes(search)
-
-        );
-
-    });
-
-    renderTable(filtered);
-
-}
-
-
-
-// ===============================
-// Modal
-// ===============================
-
-function toggleModal(show){
-
-    const modal=
-    document.getElementById("addModal");
-
-    if(show){
-
-        modal.classList.add("active");
-
-    }
-
-    else{
-
-        modal.classList.remove("active");
-
-        document
-        .getElementById("addForm")
-        .reset();
-
-    }
-
-}
-
-
-
-// ===============================
-// Edit Resident
-// ===============================
-
-let editingAcc=null;
-
-function editRecord(acc){
-
-    const resident=
-
-    records.find(r=>r.acc===acc);
-
-    if(!resident){
-
-        alert("Resident not found.");
-
-        return;
-
-    }
-
-    editingAcc=acc;
-
-    document
-    .getElementById("accNum")
-    .value=resident.acc;
-
-    document
-    .getElementById("fullName")
-    .value=resident.name;
-
-    document
-    .getElementById("address")
-    .value=resident.address;
-
-    document
-    .getElementById("block")
-    .value=resident.block;
-
-    document
-    .getElementById("lot")
-    .value=resident.lot;
-
-    toggleModal(true);
-
-}
-
-
-
-// ===============================
-// Save Resident
-// ===============================
-
-function saveRecord(event){
-
+// Real-time listener for multi-PC syncing
+onSnapshot(residentCollection, (snapshot) => {
+    records = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+    renderTable(records);
+    updateAddressCount(records);
+});
+
+async function saveRecord(event) {
     event.preventDefault();
-
-    const resident={
-
-        acc:
-        document
-        .getElementById("accNum")
-        .value,
-
-        name:
-        document
-        .getElementById("fullName")
-        .value,
-
-        address:
-        document
-        .getElementById("address")
-        .value,
-
-        block:
-        document
-        .getElementById("block")
-        .value,
-
-        lot:
-        document
-        .getElementById("lot")
-        .value
-
+    const resident = {
+        acc: document.getElementById("accNum").value,
+        name: document.getElementById("fullName").value,
+        address: document.getElementById("address").value,
+        block: document.getElementById("block").value,
+        lot: document.getElementById("lot").value
     };
 
-    if(editingAcc){
-
-        const index=
-
-        records.findIndex(
-
-            r=>r.acc===editingAcc
-
-        );
-
-        records[index]=resident;
-
-        editingAcc=null;
-
+    if (editingId) {
+        await updateDoc(doc(db, "residents", editingId), resident);
+        editingId = null;
+    } else {
+        await addDoc(residentCollection, resident);
     }
-
-    else{
-
-        records.unshift(resident);
-
-    }
-
-    localStorage.setItem(
-
-        "residentRecords",
-
-        JSON.stringify(records)
-
-    );
-
-    renderTable(records);
-
-    loadAddressFilter();
-
-    updateAddressCount(records);
-
     toggleModal(false);
-
 }
-// ===============================
-// Delete Resident
-// ===============================
 
-function deleteRecord(acc){
-
-    if(!confirm("Delete this resident?")){
-
-        return;
-
+async function deleteRecord(id) {
+    if (confirm("Delete this resident?")) {
+        await deleteDoc(doc(db, "residents", id));
     }
-
-    records = records.filter(
-
-        resident => resident.acc !== acc
-
-    );
-
-    localStorage.setItem(
-
-        "residentRecords",
-
-        JSON.stringify(records)
-
-    );
-
-    renderTable(records);
-
-    loadAddressFilter();
-
-    updateAddressCount(records);
-
 }
-
-
-
-// ===============================
-// Address Counter
-// ===============================
-
-function updateAddressCount(data){
-
-    const countBox =
-
-    document.getElementById(
-
-        "addressCount"
-
-    );
-
-    if(countBox){
-
-        countBox.innerHTML =
-
-        "Total Consumers: " +
-
-        data.length;
-
+function toggleModal(show) {
+    const modal = document.getElementById("addModal");
+    if (show) {
+        modal.classList.add("active");
+    } else {
+        modal.classList.remove("active");
+        editingId = null;
+        document.getElementById("addForm").reset();
     }
-
 }
 
+document.addEventListener("DOMContentLoaded", () => {
+    document.querySelector(".btn-add").addEventListener("click", () => toggleModal(true));
+    document.getElementById("addForm").addEventListener("submit", saveRecord);
 
-
-// ===============================
-// Initialize Website
-// ===============================
-
-loadAddressFilter();
-
-renderTable(records);
-
-updateAddressCount(records);
-
-
-
-// ===============================
-// Make functions available
-// ===============================
-
-window.editRecord = editRecord;
-
-window.deleteRecord = deleteRecord;
-
-window.saveRecord = saveRecord;
-
-window.toggleModal = toggleModal;
-
-window.filterDirectory = filterDirectory;
-
-window.filterByAddress = filterByAddress;
+    // Event Delegation for Edit/Delete buttons (necessary for dynamic content)
+    document.getElementById("directoryTable").addEventListener("click", (e) => {
+        if (e.target.classList.contains("btn-delete")) {
+            deleteRecord(e.target.dataset.id);
+        } else if (e.target.classList.contains("btn-edit")) {
+            const id = e.target.dataset.id;
+            const res = records.find(r => r.id === id);
+            editingId = id;
+            document.getElementById("accNum").value = res.acc;
+            document.getElementById("fullName").value = res.name;
+            document.getElementById("address").value = res.address;
+            document.getElementById("block").value = res.block;
+            document.getElementById("lot").value = res.lot;
+            toggleModal(true);
+        }
+    });
+});
