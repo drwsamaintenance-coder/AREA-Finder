@@ -14,17 +14,26 @@
                 <h1>Resident Accounts Directory</h1>
                 <p>Lookup account details, street addresses, blocks, and lots.</p>
             </div>
-            <button class="btn-add" id="openModal"><span>+</span> Add New Record</button>
+           <button class="btn-primary" id="openModal">
+    <span>+</span> Add New Consumer
+</button>
         </header>
 
-        <div class="filter-area">
-            <select id="addressFilter"><option value="">All Addresses</option></select>
-            <span id="addressCount">Total Consumers: 0</span>
-        </div>
+      <div class="dashboard-bar">
 
-        <div class="search-wrapper">
-            <input type="text" id="searchInput" class="search-input" placeholder="Search by name, account, address, block, or lot...">
-        </div>
+    <select id="addressFilter">
+        <option value="">All Addresses</option>
+    </select>
+
+    <input type="text"
+           id="searchInput"
+           placeholder="Search by name, account, address, block, or lot...">
+
+    <span id="addressCount" class="consumer-count">
+        Total Consumers: 0
+    </span>
+
+</div>
 
         <div class="card-container">
             <table>
