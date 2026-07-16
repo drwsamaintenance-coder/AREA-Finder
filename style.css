@@ -54,6 +54,19 @@ header p{
     color:var(--muted);
     font-size:18px;
 }
+.header-title{
+    display:flex;
+    align-items:center;
+    gap:20px;
+}
+
+.logo{
+    width: 180px;
+    height: auto;
+}
+
+
+
 
 /* ==========================
       Add Consumer Button
