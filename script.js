@@ -8,7 +8,8 @@ import {
     deleteDoc, 
     doc,
     query,
-    limit 
+    limit,
+    orderBy 
 } from "https://www.gstatic.com/firebasejs/12.0.0/firebase-firestore.js";
 
 
@@ -31,10 +32,14 @@ const addressCount = document.getElementById("addressCount");
 
 
 // ===============================
-// FIREBASE REAL TIME DATA (Optimized with Limit)
+// FIREBASE REAL TIME DATA (Strictly Limited to 50)
 // ===============================
 
-const residentsQuery = query(collection(db, "residents"), limit(50));
+const residentsQuery = query(
+    collection(db, "residents"), 
+    orderBy("acc"), // Orders the documents so the limit works reliably
+    limit(50)
+);
 
 onSnapshot(residentsQuery, (snap) => {
 
