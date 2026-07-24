@@ -202,13 +202,14 @@ document.getElementById("addForm").onsubmit = async (e)=>{
 
 
 // ===============================
-// EDIT
+// EDIT (Exposed globally for HTML onclick)
 // ===============================
 
-window.edit = (id)=>{
+function edit(id){
 
     const r = records.find(x=>x.id===id);
 
+    if (!r) return;
 
     editingId = id;
 
@@ -222,16 +223,18 @@ window.edit = (id)=>{
 
     modal.classList.add("active");
 
-};
+}
+
+window.edit = edit;
 
 
 
 
 // ===============================
-// DELETE
+// DELETE (Exposed globally for HTML onclick)
 // ===============================
 
-window.del = async(id)=>{
+async function del(id){
 
     if(confirm("Delete resident?")){
 
@@ -241,7 +244,30 @@ window.del = async(id)=>{
 
     }
 
-};
+}
+
+window.del = del;
+
+
+
+
+// ===============================
+// BATCH UPLOAD FUNCTION (Exposed for Console)
+// ===============================
+
+async function uploadBatch(start, end) {
+    // Put your array of 398 records here or paste your bulk logic
+    console.log(`Running batch upload from index ${start} to ${end}...`);
+    
+    // Example loop structure for your batch pushing:
+    const dataSlice = window.myKanluranRecordsArray.slice(start, end);
+    for (const record of dataSlice) {
+        await addDoc(collection(db, "residents"), record);
+    }
+    console.log("Batch upload complete!");
+}
+
+window.uploadBatch = uploadBatch;
 
 
 
