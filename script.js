@@ -6,7 +6,9 @@ import {
     addDoc, 
     updateDoc, 
     deleteDoc, 
-    doc 
+    doc,
+    query,
+    limit 
 } from "https://www.gstatic.com/firebasejs/12.0.0/firebase-firestore.js";
 
 
@@ -29,10 +31,12 @@ const addressCount = document.getElementById("addressCount");
 
 
 // ===============================
-// FIREBASE REAL TIME DATA
+// FIREBASE REAL TIME DATA (Optimized with Limit)
 // ===============================
 
-onSnapshot(collection(db, "residents"), (snap) => {
+const residentsQuery = query(collection(db, "residents"), limit(50));
+
+onSnapshot(residentsQuery, (snap) => {
 
     records = snap.docs.map(d => ({
         id: d.id,
