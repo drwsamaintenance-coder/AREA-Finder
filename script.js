@@ -14,7 +14,47 @@ const db = getFirestore(initializeApp({
     apiKey: "AIzaSyD1D2xYJ5egUk13q-bRs7OaejQhIHTKr7Q",
     projectId: "area-finder-540ae",
 }));
+async function uploadNewDataOnly() {
+  console.log(`Starting smart upload check for ${newResidentsData.length} records...`);
+  
+  let addedCount = 0;
+  let skippedCount = 0;
 
+  for (const item of newResidentsData) {
+    try {
+      // 1. Check if the accountNo already exists in Firestore
+      const q = window.firebaseQuery(
+        window.firebaseCollection(window.db, "residents"), 
+        window.firebaseWhere("accountNo", "==", item.accountNo)
+      );
+      const querySnapshot = await window.firebaseGetDocs(q);
+
+      // 2. If it already exists, skip it
+      if (!querySnapshot.empty) {
+        skippedCount++;
+        console.log(`Skipped existing record: ${item.accountNo} (${item.name})`);
+        continue;
+      }
+
+      // 3. If it doesn't exist, upload it
+      await window.firebaseAddDoc(window.firebaseCollection(window.db, "residents"), {
+        accountNo: item.accountNo,
+        name: item.name,
+        address: item.address,
+        block: item.block,
+        lot: item.lot
+      });
+      
+      addedCount++;
+      console.log(`Uploaded new record: ${item.accountNo} (${item.name})`);
+
+    } catch (error) {
+      console.error(`Error processing record ${item.accountNo}:`, error);
+    }
+  }
+
+  console.log(`Upload finished! Added: ${addedCount}, Skipped (already exist): ${skippedCount}`);
+}
 
 let records = [];
 let editingId = null;
