@@ -64,6 +64,8 @@ let editingId = null;
 const table = document.getElementById("directoryTable");
 const modal = document.getElementById("addModal");
 const addressFilter = document.getElementById("addressFilter");
+const blockFilter = document.getElementById("blockFilter"); // Added block filter element
+const lotFilter = document.getElementById("lotFilter");     // Added lot filter element
 const searchInput = document.getElementById("searchInput");
 const addressCount = document.getElementById("addressCount");
 
@@ -72,7 +74,6 @@ const addressCount = document.getElementById("addressCount");
 // MASTER DATA ARRAY FOR BULK UPLOAD
 // ===============================
 const accountsData = [
- 
   {
     "accountNo": "AM2019-0001RD",
     "name": "Reynaldo A. Dalisay 1",
@@ -717,8 +718,6 @@ const accountsData = [
     "block": "1B",
     "lot": "1"
   }
-
-
 ];
 
 
@@ -768,34 +767,34 @@ function render(data) {
 
 
 // ===============================
-// SEARCH + ADDRESS FILTER
+// SEARCH + FILTERS
 // ===============================
 
 function filterRecords(){
     const searchValue = searchInput.value.toLowerCase();
     const selectedAddress = addressFilter.value;
+    const selectedBlock = blockFilter.value;
+    const selectedLot = lotFilter.value;
 
     const filtered = records.filter(r => {
-        const matchesSearch =
-            Object.values(r)
-            .some(value =>
-                String(value)
-                .toLowerCase()
-                .includes(searchValue)
-            );
+        const matchesSearch = Object.values(r)
+            .some(value => String(value).toLowerCase().includes(searchValue));
 
-        const matchesAddress =
-            selectedAddress === "" ||
-            r.address === selectedAddress;
+        const matchesAddress = selectedAddress === "" || r.address === selectedAddress;
+        const matchesBlock = selectedBlock === "" || r.block === selectedBlock;
+        const matchesLot = selectedLot === "" || r.lot === selectedLot;
 
-        return matchesSearch && matchesAddress;
+        return matchesSearch && matchesAddress && matchesBlock && matchesLot;
     });
 
     render(filtered);
 }
 
+// Attach event listeners and cascading resets
 searchInput.oninput = filterRecords;
-addressFilter.onchange = filterRecords;
+addressFilter.onchange = () => { blockFilter.value = ""; lotFilter.value = ""; updateFilters(); filterRecords(); };
+blockFilter.onchange = () => { lotFilter.value = ""; updateFilters(); filterRecords(); };
+lotFilter.onchange = filterRecords;
 
 
 
@@ -879,7 +878,6 @@ window.del = del;
 // BATCH UPLOAD FUNCTIONS (Exposed for Console)
 // ===============================
 
-// 1. Manual chunk upload function (e.g., uploadBatch(0, 50))
 async function uploadBatch(start, end) {
     console.log(`Running batch upload from index ${start} to ${end}...`);
     
@@ -896,8 +894,6 @@ async function uploadBatch(start, end) {
 }
 window.uploadBatch = uploadBatch;
 
-
-// 2. Fully automated background upload function for ALL data at once
 async function uploadAllData(chunkSize = 50) {
     if (typeof accountsData === 'undefined' || !accountsData.length) {
         console.error("accountsData is missing or empty!");
@@ -916,7 +912,6 @@ async function uploadAllData(chunkSize = 50) {
             for (const record of batch) {
                 await addDoc(collection(db, "residents"), record);
             }
-            // 1-second delay between chunks to protect your connection/database limits
             await new Promise(resolve => setTimeout(resolve, 1000));
         } catch (error) {
             console.error(`Error uploading batch starting at index ${i}:`, error);
@@ -946,28 +941,39 @@ document.getElementById("closeModal").onclick = ()=>{
 
 
 // ===============================
-// ADDRESS DROPDOWN
+// DYNAMIC FILTERS (Address, Block, Lot)
 // ===============================
 
 function updateFilters(){
-    const current = addressFilter.value;
+    const currentAddress = addressFilter.value;
+    const currentBlock = blockFilter.value;
+    const currentLot = lotFilter.value;
 
-    const uniqueAddresses =
-        [...new Set(
-            records.map(r=>r.address)
-        )];
+    // 1. Unique Addresses
+    const uniqueAddresses = [...new Set(records.map(r => r.address).filter(Boolean))];
+    addressFilter.innerHTML = `<option value="">All Addresses</option>` +
+        uniqueAddresses.map(addr => `<option value="${addr}">${addr}</option>`).join("");
+    if (uniqueAddresses.includes(currentAddress)) addressFilter.value = currentAddress;
 
-    addressFilter.innerHTML =
-        `<option value="">
-            All Addresses
-        </option>` +
-        uniqueAddresses.map(address =>
-            `<option value="${address}">
-                ${address}
-            </option>`
-        ).join("");
+    // 2. Unique Blocks
+    const filteredByAddress = currentAddress ? records.filter(r => r.address === currentAddress) : records;
+    const uniqueBlocks = [...new Set(filteredByAddress.map(r => r.block).filter(Boolean))].sort((a, b) => {
+        return String(a).localeCompare(String(b), undefined, { numeric: true });
+    });
+    
+    blockFilter.innerHTML = `<option value="">All Blocks</option>` +
+        uniqueBlocks.map(b => `<option value="${b}">Block ${b}</option>`).join("");
+    if (uniqueBlocks.includes(currentBlock)) blockFilter.value = currentBlock;
 
-    if(uniqueAddresses.includes(current)){
-        addressFilter.value = current;
-    }
+    // 3. Unique Lots
+    const filteredByBlock = currentBlock ? filteredByAddress.filter(r => r.block === currentBlock) : filteredByAddress;
+    const uniqueLots = [...new Set(filteredByBlock.map(r => r.lot).filter(Boolean))].sort((a, b) => {
+        return Number(a) - Number(b);
+    });
+
+    lotFilter.innerHTML = `<option value="">All Lots</option>` +
+        uniqueLots.map(l => `<option value="${l}">Lot ${l}</option>`).join("");
+    if (uniqueLots.includes(currentLot)) lotFilter.value = currentLot;
+    
+    lotFilter.disabled = uniqueBlocks.length === 0;
 }
